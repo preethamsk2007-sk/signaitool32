@@ -1,0 +1,7 @@
+{
+  "name": "SignEase AI",
+  "description": "An AI-powered sign language interpreter that translates visual signs into spoken language and text in real-time.",
+  "requestFramePermissions": [
+    "camera"
+  ]
+}
