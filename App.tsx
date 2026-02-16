@@ -1,5 +1,5 @@
 
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useEffect } from 'react';
 import { Layout } from './components/Layout';
 import { CameraFeed } from './components/CameraFeed';
 import { TranslationBox } from './components/TranslationBox';
@@ -7,6 +7,14 @@ import { AppState, TranslationResult } from './types';
 import { geminiService } from './services/gemini';
 
 const App: React.FC = () => {
+  const [isDarkMode, setIsDarkMode] = useState(() => {
+    if (typeof window !== 'undefined') {
+      return localStorage.getItem('theme') === 'dark' || 
+        (!localStorage.getItem('theme') && window.matchMedia('(prefers-color-scheme: dark)').matches);
+    }
+    return false;
+  });
+
   const [state, setState] = useState<AppState & { isGeneratingSentence: boolean }>({
     isCapturing: false,
     isCameraOn: true,
@@ -17,6 +25,16 @@ const App: React.FC = () => {
     isProcessing: false,
     isGeneratingSentence: false,
   });
+
+  useEffect(() => {
+    if (isDarkMode) {
+      document.documentElement.classList.add('dark');
+      localStorage.setItem('theme', 'dark');
+    } else {
+      document.documentElement.classList.remove('dark');
+      localStorage.setItem('theme', 'light');
+    }
+  }, [isDarkMode]);
 
   const handleCapture = useCallback(async (base64Image: string) => {
     setState(prev => ({ ...prev, isProcessing: true, lastError: null }));
@@ -116,41 +134,58 @@ const App: React.FC = () => {
   };
 
   const headerActions = (
-    <button
-      onClick={toggleCamera}
-      className={`flex items-center space-x-2 px-5 py-2.5 rounded-xl font-bold transition-all shadow-sm ${
-        state.isCameraOn
-          ? 'bg-emerald-50 text-emerald-600 hover:bg-emerald-100 ring-1 ring-emerald-200'
-          : 'bg-slate-100 text-slate-500 hover:bg-slate-200 ring-1 ring-slate-200'
-      }`}
-    >
-      <div className={`w-2.5 h-2.5 rounded-full ${state.isCameraOn ? 'bg-emerald-500 animate-pulse' : 'bg-slate-400'}`} />
-      <span>{state.isCameraOn ? 'Camera ON' : 'Camera OFF'}</span>
-    </button>
+    <div className="flex items-center space-x-3">
+      <button
+        onClick={() => setIsDarkMode(!isDarkMode)}
+        className="p-2.5 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-700 transition-all border border-slate-200 dark:border-slate-700"
+        title="Toggle Dark Mode"
+      >
+        {isDarkMode ? (
+          <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364-6.364l-.707.707M6.343 17.657l-.707.707M16.95 16.95l.707.707M7.05 7.05l.707-.707M12 8a4 4 0 100 8 4 4 0 000-8z" />
+          </svg>
+        ) : (
+          <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" />
+          </svg>
+        )}
+      </button>
+      <button
+        onClick={toggleCamera}
+        className={`flex items-center space-x-2 px-4 py-2.5 rounded-xl font-bold transition-all shadow-sm ${
+          state.isCameraOn
+            ? 'bg-emerald-50 dark:bg-emerald-900/30 text-emerald-600 dark:text-emerald-400 hover:bg-emerald-100 dark:hover:bg-emerald-900/50 ring-1 ring-emerald-200 dark:ring-emerald-800'
+            : 'bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-700 ring-1 ring-slate-200 dark:ring-slate-700'
+        }`}
+      >
+        <div className={`w-2.5 h-2.5 rounded-full ${state.isCameraOn ? 'bg-emerald-500 animate-pulse' : 'bg-slate-400 dark:bg-slate-600'}`} />
+        <span className="hidden sm:inline">{state.isCameraOn ? 'Camera ON' : 'Camera OFF'}</span>
+      </button>
+    </div>
   );
 
   return (
     <Layout headerActions={headerActions}>
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 items-start">
         <div className="lg:col-span-8 space-y-8">
-          <div className="bg-white p-8 rounded-[2.5rem] shadow-xl shadow-slate-200/50 border border-slate-100">
+          <div className="bg-white dark:bg-slate-900 p-8 rounded-[2.5rem] shadow-xl shadow-slate-200/50 dark:shadow-none border border-slate-100 dark:border-slate-800">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-10 gap-6">
               <div>
-                <h2 className="text-3xl font-black text-slate-900 tracking-tight">AI Interpreter</h2>
-                <p className="text-base text-slate-400 font-medium">Capture signs in real-time to generate sentences</p>
+                <h2 className="text-3xl font-black text-slate-900 dark:text-white tracking-tight">AI Interpreter</h2>
+                <p className="text-base text-slate-400 dark:text-slate-500 font-medium">Capture signs in real-time to generate sentences</p>
               </div>
               <button
                 onClick={toggleCapturing}
                 disabled={!state.isCameraOn}
                 className={`flex items-center justify-center space-x-3 px-10 py-5 rounded-2xl font-extrabold transition-all shadow-xl active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed ${
                   state.isCapturing
-                    ? 'bg-rose-50 text-rose-600 hover:bg-rose-100 ring-2 ring-rose-200'
-                    : 'bg-indigo-600 text-white hover:bg-indigo-700 shadow-indigo-200 ring-4 ring-indigo-50'
+                    ? 'bg-rose-50 dark:bg-rose-900/20 text-rose-600 dark:text-rose-400 hover:bg-rose-100 dark:hover:bg-rose-900/30 ring-2 ring-rose-200 dark:ring-rose-800'
+                    : 'bg-indigo-600 text-white hover:bg-indigo-700 shadow-indigo-200 dark:shadow-none ring-4 ring-indigo-50 dark:ring-indigo-900/20'
                 }`}
               >
                 {state.isCapturing ? (
                   <>
-                    <div className="w-3.5 h-3.5 bg-rose-600 rounded-full animate-pulse" />
+                    <div className="w-3.5 h-3.5 bg-rose-600 dark:bg-rose-500 rounded-full animate-pulse" />
                     <span>Stop Interpretation</span>
                   </>
                 ) : (
@@ -173,8 +208,8 @@ const App: React.FC = () => {
             />
 
             {state.lastError && (
-              <div className="mt-8 p-5 bg-rose-50 border border-rose-100 rounded-3xl flex items-center space-x-4 text-rose-700 animate-in fade-in slide-in-from-top-4">
-                <div className="w-10 h-10 bg-rose-100 rounded-full flex items-center justify-center shrink-0">
+              <div className="mt-8 p-5 bg-rose-50 dark:bg-rose-900/20 border border-rose-100 dark:border-rose-900/30 rounded-3xl flex items-center space-x-4 text-rose-700 dark:text-rose-400 animate-in fade-in slide-in-from-top-4">
+                <div className="w-10 h-10 bg-rose-100 dark:bg-rose-900/40 rounded-full flex items-center justify-center shrink-0">
                   <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                   </svg>
@@ -187,14 +222,14 @@ const App: React.FC = () => {
             )}
           </div>
 
-          <div className="bg-slate-900 rounded-[2.5rem] p-10 text-white relative overflow-hidden group shadow-2xl">
+          <div className="bg-slate-900 dark:bg-slate-950 rounded-[2.5rem] p-10 text-white relative overflow-hidden group shadow-2xl">
             <div className="relative z-10 grid grid-cols-1 md:grid-cols-2 gap-12">
               <div className="space-y-6">
                 <div className="inline-flex items-center px-4 py-1.5 bg-indigo-500/20 rounded-full border border-indigo-400/30">
                   <span className="text-indigo-400 text-[11px] font-black uppercase tracking-[0.2em]">Guidance</span>
                 </div>
                 <h3 className="text-2xl font-black tracking-tight leading-tight">Mastering Translation</h3>
-                <p className="text-slate-400 text-base leading-relaxed font-medium">
+                <p className="text-slate-400 dark:text-slate-500 text-base leading-relaxed font-medium">
                   Construct complex thoughts by performing signs in sequence. Use the <strong>AI Fix</strong> button to turn raw keywords into natural sentences.
                 </p>
               </div>

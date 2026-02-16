@@ -5,7 +5,36 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>SignEase AI - Real-time Sign Language Interpretation</title>
+    
+    <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Tailwind Configuration for Dark Mode -->
+    <script>
+      tailwind.config = {
+        darkMode: 'class',
+        theme: {
+          extend: {
+            fontFamily: {
+              sans: ['Inter', 'sans-serif'],
+            },
+          },
+        },
+      }
+    </script>
+
+    <!-- Theme Initialization Script (Prevents Flash) -->
+    <script>
+      (function() {
+        const theme = localStorage.getItem('theme');
+        if (theme === 'dark' || (!theme && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+          document.documentElement.classList.add('dark');
+        } else {
+          document.documentElement.classList.remove('dark');
+        }
+      })();
+    </script>
+
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
@@ -20,6 +49,15 @@
       /* Smooth canvas overlay */
       canvas {
         pointer-events: none;
+      }
+
+      /* Custom scrollbar for dark mode */
+      .dark .custom-scrollbar::-webkit-scrollbar-track {
+        background: #0f172a;
+      }
+      .dark .custom-scrollbar::-webkit-scrollbar-thumb {
+        background: #334155;
+        border: 3px solid #0f172a;
       }
     </style>
   <script type="importmap">
@@ -36,9 +74,9 @@
 }
 </script>
 </head>
-  <body class="bg-slate-50 text-slate-900">
+  <body class="bg-slate-50 text-slate-900 dark:bg-slate-950 dark:text-slate-50 transition-colors duration-300">
     <div id="root"></div>
-    <!-- Load scripts for Mediapipe as standard scripts because they don't always play nice with esm.sh imports in all environments -->
+    <!-- Load scripts for Mediapipe as standard scripts -->
     <script src="https://cdn.jsdelivr.net/npm/@mediapipe/hands/hands.js" crossorigin="anonymous"></script>
     <script src="https://cdn.jsdelivr.net/npm/@mediapipe/drawing_utils/drawing_utils.js" crossorigin="anonymous"></script>
   </body>

@@ -24,21 +24,29 @@ export class GeminiService {
               },
             },
             {
-              text: `Identify the ASL sign. 
-              Output: ONE word/label only.
-              If unclear: "NO_SIGN_DETECTED".
-              Be extremely concise. No punctuation.`,
+              text: `Analyze the hand posture in this image. 
+              1. Observe the finger positions (extended, folded, or touching).
+              2. Note the palm orientation and hand shape.
+              3. Identify the most likely American Sign Language (ASL) letter or common word.
+              
+              Output ONLY the word or letter identified. 
+              If the hand is not clearly performing a sign, output "NO_SIGN_DETECTED".`,
             },
           ],
         },
         config: {
-          temperature: 0.0,
-          topP: 0.1,
+          systemInstruction: "You are an expert ASL (American Sign Language) interpreter. You specialize in identifying static hand signs from video frames with high precision. You analyze hand geometry, finger occlusion, and orientation to provide the most accurate translation.",
+          temperature: 0.1,
+          topP: 0.8,
+          // Adding thinking budget to allow the model to reason about the hand shape before deciding on the label
+          thinkingConfig: { thinkingBudget: 1024 }
         },
       });
 
       const text = response.text || '';
-      return text.trim();
+      // Sanitize output to get just the word/letter
+      const result = text.trim().split(/\s+/)[0].replace(/[^a-zA-Z_]/g, '');
+      return result || 'NO_SIGN_DETECTED';
     } catch (error) {
       console.error("Gemini translation error:", error);
       throw new Error("API busy or network slow.");
